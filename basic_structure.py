@@ -1,4 +1,5 @@
 import pygame
+import math
 import sys
 import random
 
@@ -6,7 +7,7 @@ import random
 pygame.init()
 
 # Screen dimensions
-SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+SCREEN_WIDTH, SCREEN_HEIGHT = 2000,1500
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Realistic Map with Impassable Obstacles")
 
@@ -122,19 +123,19 @@ def handle_movement(keys):
     # Calculate player's current tile
     player_tile_x = player_pos[0] // TILE_SIZE
     player_tile_y = player_pos[1] // TILE_SIZE
-
+    check_const=0.2
     # Movement checks
     if keys[pygame.K_UP]:
-        if not is_obstacle(player_tile_x, player_tile_y - 1):
+        if not is_obstacle(player_tile_x, player_tile_y - check_const):
             player_velocity[1] -= player_speed
     if keys[pygame.K_DOWN]:
-        if not is_obstacle(player_tile_x, player_tile_y + 1):
+        if not is_obstacle(player_tile_x, player_tile_y + check_const):
             player_velocity[1] += player_speed
     if keys[pygame.K_LEFT]:
-        if not is_obstacle(player_tile_x - 1, player_tile_y):
+        if not is_obstacle(player_tile_x - check_const, player_tile_y):
             player_velocity[0] -= player_speed
     if keys[pygame.K_RIGHT]:
-        if not is_obstacle(player_tile_x + 1, player_tile_y):
+        if not is_obstacle(player_tile_x + check_const, player_tile_y):
             player_velocity[0] += player_speed
 
     # Running modifier
@@ -145,7 +146,7 @@ def handle_movement(keys):
 # Check if a tile is an obstacle
 def is_obstacle(tile_x, tile_y):
     if 0 <= tile_x < MAP_COLS and 0 <= tile_y < MAP_ROWS:
-        return map_layout[tile_y][tile_x] == 3  # Impassable if tile is rock
+        return map_layout[math.floor(tile_y)][math.floor(tile_x)] == 3  # Impassable if tile is rock
     return True  # Treat out-of-bounds as impassable
 
 # Update player position
