@@ -3,7 +3,7 @@ import math
 import sys
 import random
 
-# Initialize Pygame
+# initialize Pygame
 pygame.init()
 
 # Screen dimensions
