@@ -7,7 +7,7 @@ import random
 pygame.init()
 
 # Screen dimensions
-SCREEN_WIDTH, SCREEN_HEIGHT = 1000,800
+SCREEN_WIDTH, SCREEN_HEIGHT = 2000,1500
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Realistic Map with Impassable Obstacles")
 
@@ -27,8 +27,8 @@ FPS = 60
 
 # Tile size and map dimensions
 TILE_SIZE = 50
-MAP_ROWS = 60
-MAP_COLS = 150
+MAP_ROWS = 200
+MAP_COLS = 200
 MAP_WIDTH = MAP_COLS * TILE_SIZE
 MAP_HEIGHT = MAP_ROWS * TILE_SIZE
 
@@ -219,7 +219,7 @@ def draw_minimap():
 
             # Draw the tile
             pygame.draw.rect(
-                minimap_surface,
+                minimap_/surface,
                 color,
                 (tile_screen_x, tile_screen_y, tile_scale_x, tile_scale_y),
             )
@@ -240,6 +240,7 @@ def draw_minimap():
     # Display the minimap on the screen
     screen.blit(minimap_surface, (10, 10))
 
+player_state_idx=0
 # Game loop
 while True:
     for event in pygame.event.get():
@@ -268,7 +269,14 @@ while True:
         player_color,
         (SCREEN_WIDTH // 2 - player_size // 2, SCREEN_HEIGHT // 2 - player_size // 2, player_size, player_size),
     )
+    if player_state_idx%20==0:
+        player_state_idx=0
+        if player_color==BLUE:
+            player_color=GRAY
+        else:
+            player_color=BLUE
     draw_minimap()
     # Update display
     pygame.display.flip()
     clock.tick(FPS)
+    player_state_idx+=1
