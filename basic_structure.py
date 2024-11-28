@@ -219,7 +219,7 @@ def draw_minimap():
 
             # Draw the tile
             pygame.draw.rect(
-                minimap_/surface,
+                minimap_surface,
                 color,
                 (tile_screen_x, tile_screen_y, tile_scale_x, tile_scale_y),
             )
@@ -241,6 +241,17 @@ def draw_minimap():
     screen.blit(minimap_surface, (10, 10))
 
 player_state_idx=0
+leftstop=pygame.image.load("./data/leftstop.png").convert_alpha()
+leftwalking1=pygame.image.load("./data/leftwalking1.png").convert_alpha()
+leftwalking2=pygame.image.load("./data/leftwalking2.png").convert_alpha()
+rightstop=pygame.image.load("./data/rightstop.png").convert_alpha()
+rightwalking1=pygame.image.load("./data/rightwalking1.png").convert_alpha()
+rightwalking2=pygame.image.load("./data/rightwalking2.png").convert_alpha()
+object_list=[]
+for i in [leftstop,leftwalking1,leftwalking2, rightstop, rightwalking1, rightwalking2]:
+    object_list.append(
+
+
 # Game loop
 while True:
     for event in pygame.event.get():
@@ -264,11 +275,12 @@ while True:
     # Draw the map and player
     screen.fill(WHITE)
     draw_map(offset_x, offset_y)
-    pygame.draw.rect(
-        screen,
-        player_color,
-        (SCREEN_WIDTH // 2 - player_size // 2, SCREEN_HEIGHT // 2 - player_size // 2, player_size, player_size),
-    )
+    #pygame.draw.rect(
+    #    screen,
+    #    player_color,
+    #    (SCREEN_WIDTH // 2 - player_size // 2, SCREEN_HEIGHT // 2 - player_size // 2, player_size, player_size),
+    #)
+    screen.blit(object_list[0],(0,0))
     if player_state_idx%20==0:
         player_state_idx=0
         if player_color==BLUE:
