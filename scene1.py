@@ -1,4 +1,5 @@
 import pygame
+import time
 import math
 import sys
 import random
@@ -12,6 +13,20 @@ class humanobj:
         self.obj_speed=speed
         self.obj_rsm=rsm #run_speed_multiplier
     
+class Bullet:
+    def __init__(self, pos, vel, color, size,direction):
+        self.pos = list(pos)  # Copy to avoid reference issues
+        self.vel = vel
+        self.color = color
+        self.size = size
+        self.direction=direction
+
+    def update(self):
+        self.pos[0] += self.vel[0]
+        self.pos[1] += self.vel[1]
+
+    def draw(self, screen, offset_x, offset_y):
+        pygame.draw.circle(screen, self.color, (int(self.pos[0] + offset_x), int(self.pos[1] + offset_y)), self.size)
 
 def run_game_loop():
     pygame.init()
@@ -27,16 +42,17 @@ def run_game_loop():
     GRAY=(100,100,100)
     LIGHT_BLUE=(173,216,230)
     BLACK=(0,0,0)
+    ENEMYCOLOR=(100,232,123)
 
     clock=pygame.time.Clock()
     FPS=60
 
     TILE_SIZE=50
-    MAP_ROWS=10
-    MAP_COLS=10
+    MAP_ROWS=51
+    MAP_COLS=200
     MAP_WIDTH=MAP_COLS*TILE_SIZE
     MAP_HEIGHT=MAP_ROWS*TILE_SIZE
-
+    
     player=humanobj(TILE_SIZE//2,BLUE,[MAP_WIDTH//2,MAP_HEIGHT//2],[0,0],5,1.5)
 
     grass_texture = pygame.Surface((TILE_SIZE, TILE_SIZE))
@@ -51,17 +67,56 @@ def run_game_loop():
     road_texture = pygame.Surface((TILE_SIZE, TILE_SIZE))
     road_texture.fill(GRAY)
 
+
+
+    class Enemy:
+        def __init__(self, size, color, pos, speed):
+            self.size = size
+            self.color = color
+            self.pos = pos
+            self.speed = speed
+            self.direction = [0, 0]
+
+
+        def move_towards_player(self, player_pos):
+            dir_x = player_pos[0] - self.pos[0]
+            dir_y = player_pos[1] - self.pos[1]
+            length = math.hypot(dir_x, dir_y)
+            if length == 0:
+                return
+
+            dir_x /= length
+            dir_y /= length
+            next_pos_x = self.pos[0] + dir_x * self.speed
+            next_pos_y = self.pos[1] + dir_y * self.speed
+
+            tile_x = next_pos_x // TILE_SIZE
+            tile_y = next_pos_y // TILE_SIZE
+            if not is_obstacle(tile_x, tile_y):
+                self.pos[0] = next_pos_x
+                self.pos[1] = next_pos_y
+        def draw(self, screen, offset_x, offset_y):
+            pygame.draw.rect(
+                screen,
+                self.color,
+                (int(self.pos[0] + offset_x - self.size / 2), int(self.pos[1] + offset_y - self.size / 2), self.size, self.size),
+            )
+
+
+
+
+
     rock_texture = pygame.Surface((TILE_SIZE, TILE_SIZE))
     rock_texture.fill(RED)
     #open map
-    map_layout=[[1,2,3,4,1,2,3,4,1,2],[1,2,3,4,1,2,3,4,1,2],[1,2,3,4,1,2,3,4,1,2],[1,2,3,4,1,2,3,4,1,2],[1,2,3,4,1,2,3,4,1,2],[1,2,3,4,1,2,3,4,1,2],[1,2,3,4,1,2,3,4,1,2],[1,2,3,4,1,2,3,4,1,2],[1,2,3,4,1,2,3,4,1,2],[1,2,3,4,1,2,3,4,1,2]]
-    #with open("./maps/map1.txt",'r') as file:
-     #   for line in file:
-      #      map_layout.append(list(map(int,line.split())))
-       #     if len(line) != MAP_COLS:
-        #        raise ValueError(f"Map row length {len(line)}")
-      #  if len(map_layout)!=MAP_ROWS:
-       #     raise ValueError(f"Map num_row {len(map_layout)}")
+    map_layout=[]
+    with open("./maps/map1.txt",'r') as file:
+        for line in file:
+            map_layout.append(list(map(int,line.split())))
+            #if len(line) != MAP_COLS:
+             #   raise ValueError(f"{map_layout}")
+        if len(map_layout)!=MAP_ROWS:
+            raise ValueError(f"Map num_row {len(map_layout)}")
 
     def draw_map(offset_x,offset_y): 
         for row in range(MAP_ROWS):
@@ -185,11 +240,47 @@ def run_game_loop():
         screen.blit(minimap_surface,(10,10))
 
     def game_loop():
+        bullets=[]
+        enemies = [Enemy(30, ENEMYCOLOR, [random.randint(100, MAP_WIDTH - 100), random.randint(100, MAP_HEIGHT - 100)], 2) for _ in range(10)]
+        enemy_bullets = []
+        last_enemy_shot_time = time.time()
+        
+        def fire_enemy_bullets(enemy):
+            dir_x = player.obj_pos[0] - enemy.pos[0]
+            dir_y = player.obj_pos[1] - enemy.pos[1]
+            length = math.hypot(dir_x, dir_y)
+            if length > 0:
+                dir_x /= length
+                dir_y /= length
+                velocity = [dir_x * 5, dir_y * 5]
+                enemy_bullets.append(Bullet(enemy.pos.copy(), velocity, BLACK, 5, [dir_x, dir_y]))
+
         while True:
-            for event in pygame.event.get():
+            current_time = time.time()
+            if current_time - last_enemy_shot_time > 1.5:  
+                for enemy in enemies:
+                    fire_enemy_bullets(enemy)
+                last_enemy_shot_time = current_time
+
+            for event in pygame.event.get(): 
                 if event.type==pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        bullet_velocity = [player.obj_vel[0] * 2, player.obj_vel[1] * 2]
+                        bulletdir=[1,0]
+                        if keys[pygame.K_w]:
+                            bulletdir=[0,-1]
+                        if keys[pygame.K_s]:
+                            bulletdir=[0,1]
+                        if keys[pygame.K_a]:
+                            bulletdir=[-1,0]
+                        if keys[pygame.K_d]:
+                            bulletdir=[1,0]
+                        if bullet_velocity == [0, 0]:  # Fire bullet straight if standing still
+                            bullet_velocity = [bulletdir[0]*10,bulletdir[1]*10]  
+                            bullets.append(Bullet(player.obj_pos, bullet_velocity, RED,5,bulletdir))
             keys=pygame.key.get_pressed()
             handle_movement(keys)
 
@@ -200,13 +291,64 @@ def run_game_loop():
             offset_y=min(0,max(offset_y,SCREEN_HEIGHT-MAP_HEIGHT))
 
             screen.fill(WHITE)
+            for enemy in enemies:
+                enemy.move_towards_player(player.obj_pos)
+
             draw_map(offset_x,offset_y)
             pygame.draw.rect(
                 screen,
                 player.obj_color,
                 (int(SCREEN_WIDTH//2-player.obj_size//2),int(SCREEN_HEIGHT//2-player.obj_size//2),int(player.obj_size),int(player.obj_size)),
             )
+
+            for bullet in bullets[:]:
+                bullet.update()
+                bullet.draw(screen, offset_x, offset_y)
+                if bullet.pos[0] < 0 or bullet.pos[0] > MAP_WIDTH or bullet.pos[1] < 0 or bullet.pos[1] > MAP_HEIGHT:
+                    bullets.remove(bullet)
+                tile_x = int(bullet.pos[0] // TILE_SIZE)
+                tile_y = int(bullet.pos[1] // TILE_SIZE)
+    
+                if is_obstacle(tile_x, tile_y):
+                    bullets.remove(bullet)  # Remove bullet on collision
+                    continue  # Skip further checks
+    
+                if bullet.pos[0] < 0 or bullet.pos[0] > MAP_WIDTH or bullet.pos[1] < 0 or bullet.pos[1] > MAP_HEIGHT:
+                    bullets.remove(bullet)
+                for enemy in enemies[:]:
+                    if (enemy.pos[0] - bullet.pos[0]) ** 2 + (enemy.pos[1] - bullet.pos[1]) ** 2 < (enemy.size / 2 + bullet.size) ** 2:
+                        enemies.remove(enemy)
+                        bullets.remove(bullet)
+                        break  # Prevent checking deleted bullets
+
+            for bullet in enemy_bullets[:]:
+                bullet.update()
+                bullet.draw(screen, offset_x, offset_y)
+                # Remove bullets if they go off-screen
+                if bullet.pos[0] < 0 or bullet.pos[0] > MAP_WIDTH or bullet.pos[1] < 0 or bullet.pos[1] > MAP_HEIGHT:
+                    enemy_bullets.remove(bullet)
+            for bullet in enemy_bullets[:]:
+                bullet.update()
+                bullet.draw(screen, offset_x, offset_y)
+                tile_x = int(bullet.pos[0] // TILE_SIZE)
+                tile_y = int(bullet.pos[1] // TILE_SIZE)
+    
+                if is_obstacle(tile_x, tile_y):
+                    enemy_bullets.remove(bullet)
+                    continue
+    
+                if bullet.pos[0] < 0 or bullet.pos[0] > MAP_WIDTH or bullet.pos[1] < 0 or bullet.pos[1] > MAP_HEIGHT:
+                    enemy_bullets.remove(bullet)
+                if bullet.pos[0] < 0 or bullet.pos[0] > MAP_WIDTH or bullet.pos[1] < 0 or bullet.pos[1] > MAP_HEIGHT:
+                    enemy_bullets.remove(bullet)
+        
+                if (player.obj_pos[0] - bullet.pos[0]) ** 2 + (player.obj_pos[1] - bullet.pos[1]) ** 2 < (player.obj_size / 2 + bullet.size) ** 2:
+                    pygame.quit()
+                    sys.exit()
+
             draw_minimap()
+            for enemy in enemies:
+                enemy.draw(screen, offset_x, offset_y)
             pygame.display.flip()
             clock.tick(FPS)
     game_loop()
