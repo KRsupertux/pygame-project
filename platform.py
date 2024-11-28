@@ -1,6 +1,7 @@
 """
 저장 기능을 추가하자
 """
+from idlelib.pyparse import trans
 
 import pygame as pg
 import sys
@@ -13,11 +14,11 @@ from pygame.examples.cursors import image
 
 pg.init()
 
-SCREEN_W = 800
-SCREEN_H = 600
+SCREEN_W = 1500
+SCREEN_H = 800
 
 WHITE = (255, 255, 255)
-SKYBLUE = (135, 206, 235)
+SKYBLUE = (56, 100, 101)
 RED = (255, 0, 0)
 # 색상 추가
 YELLOW = (255, 255, 0)
@@ -42,29 +43,34 @@ maps = [
         "....................",
         "....................",
         "....................",
-        "...E.P...F....G.....",
-        "...##############...",
+        ".....P...E...E.........E.......G.....",
+        "#####################################",
         "....................",
         "....................",
         "....................",
         "....................",
     ],
     [
+        "........###.........",
+        ".......#...#.....",
+        "...#...#....#............",
+        ".#..............#..",
+        "........E..#......",
+        ".##.....###.........",
+        ".....#....................E.E",
+        "............................#.",
+        "..#####...............E.#...#.",
+        "..........#.............#...#..",
+        "...........##...........#...#.",
+        "................E.......#.",
+        "...............##.......#.",
+        "........E...............##......EEEEE",
+        ".......#####............###........G.",
+        "...............##.........###########",
         "....................",
-        "....................",
-        "...G................",
-        "..#####.............",
-        "..........#.E.......",
-        "...........##.......",
-        "....................",
-        "...............##...",
-        "........F...........",
-        ".......#####........",
-        "...............##...",
-        "............E.......",
         "...........########.",
         ".P...F..............",
-        "########............",
+        "#####################################",
     ],
 ]
 
@@ -228,15 +234,6 @@ class Bullet(pg.sprite.Sprite):
             if pg.sprite.collide_rect(self, ground):
                 self.kill()
 
-
-class Flag(pg.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.image = pg.image.load("data/flag.png")
-        self.rect = self.image.get_rect()
-        self.rect.topleft = (x, y)
-
-
 def load_level(level):
     all_sprites = pg.sprite.Group()
     player = None
@@ -244,8 +241,6 @@ def load_level(level):
     grounds = pg.sprite.Group()
     enemies = pg.sprite.Group()
     bullets = pg.sprite.Group()
-    # 게임을 저장하는 위치를 표시하는 깃발을 추가한다
-    flags = pg.sprite.Group()
 
     map = maps[level]
     for row_idx, row in enumerate(map):
@@ -254,7 +249,8 @@ def load_level(level):
             y = row_idx * TILE_SIZE
             if tile == "#":
                 ground = pg.sprite.Sprite()
-                ground.image = pg.image.load("data/dirt.png")
+                ground.image = pg.image.load("data/stone.png")
+                # ground.image = pg.transform.scale(groundori_image, (30,30))
                 ground.rect = ground.image.get_rect()
                 ground.rect.topleft = (x, y)
                 grounds.add(ground)
@@ -269,21 +265,17 @@ def load_level(level):
                 enemy = Enemy(x, y)
                 enemies.add(enemy)
                 all_sprites.add(enemy)
-            elif tile == "F":
-                flag = Flag(x, y)
-                flags.add(flag)
-                all_sprites.add(flag)
 
     if player is None:
         raise Exception("No player in the map")
     if goal is None:
         raise Exception("No goal in the map")
 
-    return all_sprites, player, goal, grounds, enemies, bullets, flags
+    return all_sprites, player, goal, grounds, enemies, bullets
 
 
 def game_loop(level=0, pos=None):
-    all_sprites, player, goal, grounds, enemies, bullets, flags = load_level(level)
+    all_sprites, player, goal, grounds, enemies, bullets = load_level(level)
 
     # 플레이어의 위치를 이어받아서 게임을 시작한다
     if pos:
@@ -317,7 +309,7 @@ def game_loop(level=0, pos=None):
             if level >= len(maps):
                 print("Game Clear!")
                 return
-            all_sprites, player, goal, grounds, enemies, bullets, flags = load_level(
+            all_sprites, player, goal, grounds, enemies, bullets = load_level(
                 level
             )
 
@@ -329,16 +321,6 @@ def game_loop(level=0, pos=None):
             print("Game Over!")
             return
 
-        # 깃발을 획득하면 게임을 저장한다
-        for flag in pg.sprite.spritecollide(player, flags, False):
-            print("Game saved!")
-            # 깃발을 제거한다
-            flag.kill()
-            # 레벨과 플레이어의 위치를 저장한다
-            save_game(level, player.rect.topleft)
-
-        for enemy in pg.sprite.groupcollide(enemies, bullets, True, True):
-            print(f"Enemy killed at {enemy.rect.center}")
 
         screen.fill(SKYBLUE)
         all_sprites.draw(screen)
@@ -347,56 +329,5 @@ def game_loop(level=0, pos=None):
         clock.tick(FPS)
 
 
-def main_menu():
-    menu_options = ["Start New Game", "Load Game", "Quit"]
-    selected_option = 0
-    while True:
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                sys.exit()
-            elif event.type == pg.KEYDOWN:
-                if event.key == pg.K_DOWN:
-                    selected_option = (selected_option + 1) % len(menu_options)
-                elif event.key == pg.K_UP:
-                    selected_option = (selected_option - 1) % len(menu_options)
-                elif event.key == pg.K_RETURN:
-                    if selected_option == 0:
-                        game_loop()
-                    elif selected_option == 1:
-                        # 저장된 게임을 불러온다
-                        level, pos = load_game()
-                        game_loop(level, pos)
-                    elif selected_option == 2:
-                        sys.exit()
-        screen.fill(SKYBLUE)
-        title_font = pg.font.Font(None, 80)
-        title_text = title_font.render("Square Adventure", True, WHITE)
-        screen.blit(title_text, (SCREEN_W // 2 - title_text.get_width() // 2, 100))
-        menu_font = pg.font.Font(None, 40)
-        for i, option in enumerate(menu_options):
-            color = YELLOW if i == selected_option else WHITE
-            text = menu_font.render(option, True, color)
-            screen.blit(
-                text,
-                (SCREEN_W // 2 - text.get_width() // 2, SCREEN_H // 2 + i * 60),
-            )
-        pg.display.update()
-        clock.tick(FPS)
-
-
-# 게임을 파일에 저장한다
-def save_game(level, pos):
-    with open("savefile", "wb") as f:
-        pickle.dump((level, pos), f)
-
-
-# 게임 저장 파일을 불러온다
-def load_game():
-    if os.path.exists("savefile"):
-        with open("savefile", "rb") as f:
-            return pickle.load(f)
-    return 0, None  # Default to first level if no save is found
-
-
 if __name__ == "__main__":
-    main_menu()
+    game_loop()
