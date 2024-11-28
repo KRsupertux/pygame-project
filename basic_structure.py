@@ -228,9 +228,9 @@ def draw_minimap():
     player_minimap_x = (player_pos[0] / TILE_SIZE - minimap_start_x) * tile_scale_x
     player_minimap_y = (player_pos[1] / TILE_SIZE - minimap_start_y) * tile_scale_y
     pygame.draw.circle(
-        minimap_surface, 
-        BLUE, 
-        (int(player_minimap_x), int(player_minimap_y)), 
+        minimap_surface,
+        BLUE,
+        (int(player_minimap_x), int(player_minimap_y)),
         5
     )
 
