@@ -9,6 +9,8 @@ import sys
 import pickle
 import os
 
+from pygame.examples.cursors import image
+
 pg.init()
 
 SCREEN_W = 800
@@ -25,7 +27,7 @@ FPS = 60
 TILE_SIZE = 40
 
 screen = pg.display.set_mode((SCREEN_W, SCREEN_H))
-pg.display.set_caption("Square Adventure")
+pg.display.set_caption("pakour")
 clock = pg.time.Clock()
 
 
@@ -40,7 +42,7 @@ maps = [
         "....................",
         "....................",
         "....................",
-        ".....P...F....G.....",
+        "...E.P...F....G.....",
         "...##############...",
         "....................",
         "....................",
@@ -101,28 +103,46 @@ class Character(pg.sprite.Sprite):
                 self.rect.top = ground.rect.bottom
                 self.speed_y = 0
 
-
+images = {
+    "smallleftstop": pg.image.load("data/smallleftstop.png"),
+    "smallleftwalking1": pg.image.load("data/smallleftwalking1.png"),
+    "smallleftwalking2": pg.image.load("data/smallleftwalking2.png"),
+    "smallrightstop": pg.image.load("data/smallrightstop.png"),
+    "smallrightwalking1": pg.image.load("data/smallrightwalking1.png"),
+    "smallrightwalking2": pg.image.load("data/smallrightwalking2.png"),
+}
 class Player(Character):
     def __init__(self, x, y):
         super().__init__(x, y, WHITE)
-        self.image = pg.image.load("data/KakaoTalk_20241014_152807486.png")
+        self.image = pg.image.load("data/downstop.png")
+        self.is_moving = False
+        self.frame_count = 0
+        self.player_state_idx = "left"
+        self.on_ground = True
+        self.image_size = (150, 150)
 
     def update(self, grounds):
         self.move()
+        self.update_image()
         super().update(grounds)
 
     def move(self):
         self.speed_y += 30
 
         keys = pg.key.get_pressed()
-        if keys[pg.K_a] and not keys[pg.K_d]:
+        if keys[pg.K_LEFT] and not keys[pg.K_RIGHT]:
             self.speed_x = -300
-        elif not keys[pg.K_a] and keys[pg.K_d]:
+            self.player_state_idx = "left"
+            self.is_moving = True
+        elif keys[pg.K_RIGHT] and not keys[pg.K_LEFT]:
             self.speed_x = 300
+            self.player_state_idx = "right"
+            self.is_moving = True
         else:
             self.speed_x = 0
+            self.is_moving = False
 
-        if keys[pg.K_SPACE]:
+        if keys[pg.K_UP]:
             if self.on_ground:
                 self.speed_y = -600
                 self.on_ground = False
@@ -132,12 +152,29 @@ class Player(Character):
         all_sprites.add(bullet)
         bullets.add(bullet)
 
+    def update_image(self):
+        global images
+
+        if self.is_moving:
+            self.frame_count += 1
+            if self.frame_count // 10 % 2 == 0:
+                image_key = f"small{self.player_state_idx}walking1"
+            else:
+                image_key = f"small{self.player_state_idx}walking2"
+        else:
+            image_key = f"small{self.player_state_idx}stop"
+
+        original_image = images[image_key]
+        self.image = pg.transform.scale(original_image, self.image_size)
+
+
 
 class Enemy(Character):
     def __init__(self, x, y):
         super().__init__(x, y, RED)
         self.speed_x = 0
-        self.image = pg.image.load("")
+        ori_image = pg.image.load("data/cone.png")
+        self.image = pg.transform.scale(ori_image, (150,150))
 
     def is_on_edge(self, grounds):
         if self.speed_x > 0:
@@ -274,7 +311,6 @@ def game_loop(level=0, pos=None):
         if len(time_list) == 10:
             time_list.pop(0)
         time_list.append((player, enemies))
-        print(time_list)
 
         if pg.sprite.collide_rect(player, goal):
             level += 1
