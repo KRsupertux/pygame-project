@@ -7,7 +7,7 @@ import random
 pygame.init()
 
 # Screen dimensions
-SCREEN_WIDTH, SCREEN_HEIGHT = 2000,1500
+SCREEN_WIDTH, SCREEN_HEIGHT = 1500,800
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Realistic Map with Impassable Obstacles")
 
@@ -90,6 +90,22 @@ for _ in range(500):
     if map_layout[y][x] in [0, 1]:  # Place on grass or dirt only
         map_layout[y][x] = 3
 
+#images
+images = {
+    "upstop": pygame.image.load("data/upstop.png"),
+    "upwalking1": pygame.image.load("data/upwalking1.png"),
+    "upwalking2": pygame.image.load("data/upwalking2.png"),
+    "downstop": pygame.image.load("data/downstop.png"),
+    "downwalking1": pygame.image.load("data/downwalking1.png"),
+    "downwalking2": pygame.image.load("data/downwalking2.png"),
+    "leftstop": pygame.image.load("data/leftstop.png"),
+    "leftwalking1": pygame.image.load("data/leftwalking1.png"),
+    "leftwalking2": pygame.image.load("data/leftwalking2.png"),
+    "rightstop": pygame.image.load("data/rightstop.png"),
+    "rightwalking1": pygame.image.load("data/rightwalking1.png"),
+    "rightwalking2": pygame.image.load("data/rightwalking2.png"),
+}
+
 # Function to draw the map
 def draw_map(offset_x, offset_y):
     for row in range(MAP_ROWS):
@@ -115,7 +131,7 @@ def draw_map(offset_x, offset_y):
 
 # Handle player movement
 def handle_movement(keys):
-    global player_velocity
+    global player_velocity, player_state_idx, is_moving
 
     # Reset velocity
     player_velocity = [0, 0]
@@ -128,15 +144,23 @@ def handle_movement(keys):
     if keys[pygame.K_UP]:
         if not is_obstacle(player_tile_x, player_tile_y - check_const):
             player_velocity[1] -= player_speed
+        player_state_idx = "up"
+        is_moving = True
     if keys[pygame.K_DOWN]:
         if not is_obstacle(player_tile_x, player_tile_y + check_const):
             player_velocity[1] += player_speed
+        player_state_idx = "down"
+        is_moving = True
     if keys[pygame.K_LEFT]:
         if not is_obstacle(player_tile_x - check_const, player_tile_y):
             player_velocity[0] -= player_speed
+        player_state_idx = "left"
+        is_moving = True
     if keys[pygame.K_RIGHT]:
         if not is_obstacle(player_tile_x + check_const, player_tile_y):
             player_velocity[0] += player_speed
+        player_state_idx = "right"
+        is_moving = True
 
     # Running modifier
     if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:
@@ -240,18 +264,27 @@ def draw_minimap():
     # Display the minimap on the screen
     screen.blit(minimap_surface, (10, 10))
 
-player_state_idx=0
-leftstop=pygame.image.load("./data/leftstop.png").convert_alpha()
-leftwalking1=pygame.image.load("./data/leftwalking1.png").convert_alpha()
-leftwalking2=pygame.image.load("./data/leftwalking2.png").convert_alpha()
-rightstop=pygame.image.load("./data/rightstop.png").convert_alpha()
-rightwalking1=pygame.image.load("./data/rightwalking1.png").convert_alpha()
-rightwalking2=pygame.image.load("./data/rightwalking2.png").convert_alpha()
-object_list=[]
-#for i in [leftstop,leftwalking1,leftwalking2, rightstop, rightwalking1, rightwalking2]:
- #   object_list.append(
+def update_player_animation():
+    global frame_count, is_moving, player_state_idx, images
+
+    if is_moving:
+        frame_count += 1
+        if frame_count // 10 % 2 == 0:
+            image_key = f"{player_state_idx}walking1"
+        else:
+            image_key = f"{player_state_idx}walking2"
+    else:
+        image_key = f"{player_state_idx}stop"
 
 
+    # 화면 중앙에 이미지 그리기
+    screen.blit(images[image_key], (0, 0))
+    pygame.display.flip()  # 화면 업데이트
+
+
+
+
+frame_count = 0
 # Game loop
 while True:
     for event in pygame.event.get():
@@ -259,12 +292,16 @@ while True:
             pygame.quit()
             sys.exit()
 
+    player_state_idx = "down"
+    is_moving = False
+
     # Handle input
     keys = pygame.key.get_pressed()
     handle_movement(keys)
 
     # Update player position
     update_player_position()
+
 
     # Calculate map offset
     offset_x = SCREEN_WIDTH // 2 - player_pos[0]
@@ -275,20 +312,11 @@ while True:
     # Draw the map and player
     screen.fill(WHITE)
     draw_map(offset_x, offset_y)
-    pygame.draw.rect(
-        screen,
-        player_color,
-        (SCREEN_WIDTH // 2 - player_size // 2, SCREEN_HEIGHT // 2 - player_size // 2, player_size, player_size),
-    )
     #screen.blit(object_list[0],(0,0))
-    if player_state_idx%20==0:
-        player_state_idx=0
-        if player_color==BLUE:
-            player_color=GRAY
-        else:
-            player_color=BLUE
     draw_minimap()
+    #Update player animation
+    update_player_animation()
+
     # Update display
     pygame.display.flip()
     clock.tick(FPS)
-    player_state_idx+=1
