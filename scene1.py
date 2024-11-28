@@ -35,12 +35,12 @@ def run_game_loop():
 
     #Colors
     WHITE=(255,255,255)
-    GREEN=(50,150,50)
+    GREEN=(41,71,38)
     BROWN=(139,69,19)
-    BLUE=(0,0,255)
+    BLUE=(48,55,90)
     RED=(200,50,50)
     GRAY=(100,100,100)
-    LIGHT_BLUE=(173,216,230)
+    LIGHT_BLUE=(56,100,101)
     BLACK=(0,0,0)
     ENEMYCOLOR=(100,232,123)
 
@@ -241,10 +241,10 @@ def run_game_loop():
 
     def game_loop():
         bullets=[]
-        enemies = [Enemy(30, ENEMYCOLOR, [random.randint(100, MAP_WIDTH - 100), random.randint(100, MAP_HEIGHT - 100)], 2) for _ in range(10)]
+        enemies = [Enemy(30, ENEMYCOLOR, [random.randint(100, MAP_WIDTH - 100), random.randint(100, MAP_HEIGHT - 100)], 2) for _ in range(100)]
         enemy_bullets = []
         last_enemy_shot_time = time.time()
-        
+        killcounter=0
         def fire_enemy_bullets(enemy):
             dir_x = player.obj_pos[0] - enemy.pos[0]
             dir_y = player.obj_pos[1] - enemy.pos[1]
@@ -319,6 +319,7 @@ def run_game_loop():
                     if (enemy.pos[0] - bullet.pos[0]) ** 2 + (enemy.pos[1] - bullet.pos[1]) ** 2 < (enemy.size / 2 + bullet.size) ** 2:
                         enemies.remove(enemy)
                         bullets.remove(bullet)
+                        killcounter+=1
                         break  # Prevent checking deleted bullets
 
             for bullet in enemy_bullets[:]:
@@ -349,6 +350,8 @@ def run_game_loop():
             draw_minimap()
             for enemy in enemies:
                 enemy.draw(screen, offset_x, offset_y)
+            if killcounter>3:
+                pygame.quit()
             pygame.display.flip()
             clock.tick(FPS)
     game_loop()
