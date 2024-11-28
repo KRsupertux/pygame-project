@@ -7,7 +7,7 @@ import random
 pygame.init()
 
 # Screen dimensions
-SCREEN_WIDTH, SCREEN_HEIGHT = 2000,1500
+SCREEN_WIDTH, SCREEN_HEIGHT = 1000,800
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Realistic Map with Impassable Obstacles")
 
@@ -59,7 +59,7 @@ rock_texture = pygame.Surface((TILE_SIZE, TILE_SIZE))
 rock_texture.fill(RED)
 
 # Map design
-map_layout = [[random.choice([0, 1]) for _ in range(MAP_COLS)] for _ in range(MAP_ROWS)]
+    map_layout = [[random.choice([0, 1]) for _ in range(MAP_COLS)] for _ in range(MAP_ROWS)]
 
 # Add roads
 for _ in range(10):  # Vertical roads

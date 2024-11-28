@@ -16,7 +16,7 @@ video_path = r"C:\Users\shy01\Downloads\WW2_ Battle Of Stalingrad (Intense Foota
 audio_path = r"C:\Users\shy01\Downloads\WW2_ Battle Of Stalingrad (Intense Footage).mp3"
 
 
-# 동영상 및 오디오 재생 함수`
+# 동영상 및 오디오 재생 함수
 def play_cutscene_with_audio(video_path, audio_path, screen):
     # MoviePy로 비디오 클립 로드
     clip = VideoFileClip(video_path)
@@ -49,25 +49,3 @@ def play_cutscene_with_audio(video_path, audio_path, screen):
 
     pygame.mixer.music.stop()
     clip.close()
-
-
-# 메인 루프
-def main():
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-        screen.fill((0, 0, 0))  # 검은색 화면
-        pygame.display.update()
-
-        # 스페이스바로 컷씬 재생
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
-            play_cutscene_with_audio(video_path, audio_path, screen)
-    pygame.quit()
-
-if __name__ == "__main__":
-    main()
-
