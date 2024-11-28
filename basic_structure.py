@@ -7,7 +7,7 @@ import random
 pygame.init()
 
 # Screen dimensions
-SCREEN_WIDTH, SCREEN_HEIGHT = 1000,800
+SCREEN_WIDTH, SCREEN_HEIGHT = 2000,1500
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Realistic Map with Impassable Obstacles")
 
@@ -59,7 +59,7 @@ rock_texture = pygame.Surface((TILE_SIZE, TILE_SIZE))
 rock_texture.fill(RED)
 
 # Map design
-    map_layout = [[random.choice([0, 1]) for _ in range(MAP_COLS)] for _ in range(MAP_ROWS)]
+map_layout = [[random.choice([0, 1]) for _ in range(MAP_COLS)] for _ in range(MAP_ROWS)]
 
 # Add roads
 for _ in range(10):  # Vertical roads
@@ -248,8 +248,8 @@ rightstop=pygame.image.load("./data/rightstop.png").convert_alpha()
 rightwalking1=pygame.image.load("./data/rightwalking1.png").convert_alpha()
 rightwalking2=pygame.image.load("./data/rightwalking2.png").convert_alpha()
 object_list=[]
-for i in [leftstop,leftwalking1,leftwalking2, rightstop, rightwalking1, rightwalking2]:
-    object_list.append(
+#for i in [leftstop,leftwalking1,leftwalking2, rightstop, rightwalking1, rightwalking2]:
+ #   object_list.append(
 
 
 # Game loop
@@ -275,12 +275,12 @@ while True:
     # Draw the map and player
     screen.fill(WHITE)
     draw_map(offset_x, offset_y)
-    #pygame.draw.rect(
-    #    screen,
-    #    player_color,
-    #    (SCREEN_WIDTH // 2 - player_size // 2, SCREEN_HEIGHT // 2 - player_size // 2, player_size, player_size),
-    #)
-    screen.blit(object_list[0],(0,0))
+    pygame.draw.rect(
+        screen,
+        player_color,
+        (SCREEN_WIDTH // 2 - player_size // 2, SCREEN_HEIGHT // 2 - player_size // 2, player_size, player_size),
+    )
+    #screen.blit(object_list[0],(0,0))
     if player_state_idx%20==0:
         player_state_idx=0
         if player_color==BLUE:
